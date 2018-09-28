@@ -7,7 +7,7 @@
  module.exports = merge(common, {
    mode: 'development',
    devtool: 'inline-source-map',
-   module: {
+  /* module: {
         rules: [{
               test: /\.(js|jsx)$/,
               include: path.resolve(CONF.SRC_PATH),
@@ -17,11 +17,10 @@
                 plugins: ['react-hot-loader/babel'],
             }
         }]
-   },
+   }, */
    devServer: {
       port: process.env.PORT || 4200,
-      contentBase: path.resolve(CONF.BASE_DEST_PATH),
-      historyApiFallback: true,
-      hot: true
+      publicPath: '/',
+      contentBase: './dist'
    }
 });

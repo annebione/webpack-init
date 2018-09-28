@@ -1,30 +1,28 @@
 const path = require('path');
 const webpack = require('webpack');
-var ZopfliPlugin = require("zopfli-webpack-plugin");
 var HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 const CONF = require('./conf');
 
-module.exports = {
+const webpackCommonConfig = {
   entry: {
-     index: path.resolve('./src/index.js')
-  },
-  output: {
-    filename: '[name].bundle.js',
-    chunkFilename: '[name].bundle.js',
-    path: path.resolve(CONF.DEST_ASSETS_PATH),
-    publicPath: path.resolve(CONF.BASE_DEST_PATH)
+     "index": path.resolve('./src/index.js'),
+     "vendor": ["react", "redux"]
   },
   module: {
      rules: [
-      {
+    /*  {
         enforce: 'pre',
-        test: /\.(js|jsx)$/,
+        test: /\.(js)$/,
         loader: 'eslint-loader',
         include: path.resolve(CONF.SRC_PATH),
-        exclude: /(node_modules)/
-      },
+        exclude: /(node_modules)/,
+        options: {
+          fix: true,
+          failOnError: false
+        }
+      }, */
       {
         test: /\.scss$/,
         include: path.resolve(CONF.SRC_PATH),
@@ -46,30 +44,36 @@ module.exports = {
         exclude: /\.(spec.js|test.js)$/,
         include: path.resolve(CONF.SRC_PATH),
         use: [
-          'babel-loader'
+          {
+            loader: 'babel-loader',
+          }
         ]
       }
     ]
   },
   optimization: {
     mergeDuplicateChunks: true,
+    occurrenceOrder: true,
     splitChunks: {
       chunks: 'all',
-      minSize: 60,
-      maxSize: 300,
+      minSize: 1000,
+      maxSize: 30000,
       minChunks: 2,
       maxAsyncRequests: 5,
       maxInitialRequests: 3,
-      automaticNameDelimiter: '~',
+      automaticNameDelimiter: '.',
       name: true,
       cacheGroups: {
         vendors: {
-          test: /[\\/]node_modules[\\/]/,
-          priority: -10
+          chunks: 'initial',
+          name: 'vendor',
+          test: 'vendor',
+          priority: 20,
+          enforce: true
         },
         default: {
           minChunks: 2,
-          priority: -20,
+          priority: 20,
           reuseExistingChunk: true
         }
       }
@@ -77,26 +81,27 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: `${CONF.SRC_PATH}/index.html`,
+      template: path.resolve(CONF.SRC_PATH + '/index.html'),
+      filename: '../index.html'
     }),
-    //new webpack.NoErrorsPlugin(),
-		//new webpack.optimize.DedupePlugin(),
-    new webpack.AutomaticPrefetchPlugin()
-   // new webpack.optimize.UglifyJsPlugin({
-	//		output: { comments: false },
-	//		exclude: [ /\.min\.js$/gi ]
-  //  }),
-    ,
+    new webpack.AutomaticPrefetchPlugin(),
     new MiniCssExtractPlugin({
       filename: "[name].css",
       chunkFilename: "[id].css"
     }),
-    new ZopfliPlugin({
-      asset: "[path].gz[query]",
-      algorithm: "zopfli",
-      test: /\.(js|html)$/,
-      threshold: 10240,
-      minRatio: 0.8
+    new webpack.SourceMapDevToolPlugin({
+      filename: "[file].map"
     })
-  ]
+  ],
+  output: {
+    path: path.join(__dirname, CONF.BASE_DEST_PATH),
+    publicPath: './assets/',
+    filename: '[name].bundle.js',
+    chunkFilename: '[name].chunk.js',
+  },
 };
+
+
+module.exports = webpackCommonConfig;
+
+console.log(webpackCommonConfig);
